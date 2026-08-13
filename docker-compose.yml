@@ -17,11 +17,3 @@ services:
     container_name: php-fpm
     volumes:
       - ./web:/var/www/html
-
-  # Versi CLI "Hello World" (dijalankan manual dengan --profile cli)
-  app:
-    build: .
-    container_name: php-hello-world
-    profiles: ["cli"]
-    volumes:
-      - ./index.php:/app/index.php
