@@ -1,0 +1,27 @@
+services:
+  # Web server Nginx - menampilkan halaman ke browser
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+
+  # PHP-FPM - memproses file .php yang diminta oleh Nginx
+  php:
+    image: php:8.3-fpm
+    container_name: php-fpm
+    volumes:
+      - ./web:/var/www/html
+
+  # Versi CLI "Hello World" (dijalankan manual dengan --profile cli)
+  app:
+    build: .
+    container_name: php-hello-world
+    profiles: ["cli"]
+    volumes:
+      - ./index.php:/app/index.php
