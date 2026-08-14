@@ -12,8 +12,26 @@ services:
       - php
 
   # PHP-FPM - memproses file .php yang diminta oleh Nginx
+  # Menggunakan image custom dengan ekstensi Redis (lihat ./php/Dockerfile)
   php:
-    image: php:8.3-fpm
+    build: ./php
     container_name: php-fpm
     volumes:
       - ./web:/var/www/html
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  # Redis - penyimpanan data in-memory
+  redis:
+    image: redis:7-alpine
+    container_name: redis-server
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
