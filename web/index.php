@@ -36,7 +36,7 @@
 </head>
 <body>
     <div class="card">
-        <h1>Halo, Dunia! 👋</h1>
+        <h1>Halo, Macan! 👋</h1>
         <p>Halaman ini disajikan oleh <strong>Nginx</strong> dan diproses oleh <strong>PHP-FPM</strong>.</p>
         <p>Versi PHP: <code><?= PHP_VERSION ?></code></p>
         <p>Server: <code><?= $_SERVER['SERVER_SOFTWARE'] ?? 'Nginx' ?></code></p>
