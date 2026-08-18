@@ -40,10 +40,14 @@
         <p>Halaman ini disajikan oleh <strong>Nginx</strong> dan diproses oleh <strong>PHP-FPM</strong>.</p>
         <p>Versi PHP: <code><?= PHP_VERSION ?></code></p>
         <p>Server: <code><?= $_SERVER['SERVER_SOFTWARE'] ?? 'Nginx' ?></code></p>
-        <p style="margin-top: 1rem;">
+        <p style="margin-top: 1rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
             <a href="redis_crud.php"
                style="color: #fff; background: rgba(0,0,0,0.25); padding: 0.5rem 1.2rem; border-radius: 8px; text-decoration: none;">
-                🚀 Coba CRUD Redis →
+                🚀 CRUD Redis →
+            </a>
+            <a href="mariadb_crud.php"
+               style="color: #fff; background: rgba(0,0,0,0.25); padding: 0.5rem 1.2rem; border-radius: 8px; text-decoration: none;">
+                🗄️ CRUD MariaDB →
             </a>
         </p>
     </div>
