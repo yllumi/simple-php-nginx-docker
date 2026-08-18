@@ -1,6 +1,6 @@
 # PHP Hello World dengan Docker
 
-Project "Hello World" menggunakan PHP, Nginx, Redis, MariaDB, dan Docker.
+Project "Hello World" menggunakan PHP, Nginx, Redis, MySQL, dan Docker.
 
 ## Struktur Project
 
@@ -9,20 +9,20 @@ Project "Hello World" menggunakan PHP, Nginx, Redis, MariaDB, dan Docker.
 ├── web/
 │   ├── index.php       # Halaman web utama
 │   ├── redis_crud.php  # CRUD sederhana dengan penyimpanan Redis
-│   └── mariadb_crud.php# CRUD sederhana dengan penyimpanan MariaDB
+│   └── mariadb_crud.php# CRUD sederhana dengan penyimpanan MySQL
 ├── nginx/
 │   └── default.conf    # Konfigurasi Nginx
 ├── php/
 │   └── Dockerfile      # Image PHP-FPM + ekstensi Redis & PDO MySQL
-├── mariadb/
-│   └── init/
-│       └── 01-init.sql # Skrip inisialisasi tabel (dijalankan saat pertama kali)
+├── sql/
+│   └── setup.sql       # Skrip setup database & tabel untuk MySQL lokal
+├── .env                # Kredensial MySQL lokal (host)
 ├── index.php           # Script PHP CLI (opsional)
-├── docker-compose.yml  # Definisi container (nginx + php-fpm + redis + mariadb)
+├── docker-compose.yml  # Definisi container (nginx + php-fpm + redis)
 └── README.md
 ```
 
-## Menjalankan Web Server (Nginx + PHP-FPM + Redis + MariaDB)
+## Menjalankan Web Server (Nginx + PHP-FPM + Redis + MySQL Lokal)
 
 ```bash
 docker compose up --build
@@ -34,7 +34,9 @@ Service yang berjalan:
 - **nginx** (`nginx:alpine`) — web server di port `80` (host: `8082`)
 - **php** (custom `php:8.3-fpm` + ekstensi `redis` & `pdo_mysql`) — pemroses file PHP
 - **redis** (`redis:7-alpine`) — penyimpanan data in-memory di port `6379` (host: `6381`)
-- **mariadb** (`mariadb:11`) — database relasional di port `3306` (host: `3307`)
+
+Database yang dipakai adalah **MySQL lokal di mesin host** (port `3306`),
+diakses dari dalam container melalui `host.docker.internal` (lihat `.env`).
 
 > Catatan: host port untuk nginx (`8082`) dan redis (`6381`) dipilih agar tidak
 > bentrok dengan proyek Docker lain yang sudah berjalan di `8080`/`6380`.
@@ -62,10 +64,10 @@ KEYS *          # lihat semua key
 HGETALL item:1  # lihat detail data ID 1
 ```
 
-## Halaman CRUD MariaDB
+## Halaman CRUD MySQL
 
 Buka **http://localhost:8082/mariadb_crud.php** untuk mencoba CRUD sederhana
-dengan penyimpanan di database relasional MariaDB:
+dengan penyimpanan di database MySQL lokal (host):
 
 - **Tambah** — isi form nama & deskripsi lalu klik Simpan
 - **Lihat** — semua data tampil dalam tabel
@@ -73,19 +75,23 @@ dengan penyimpanan di database relasional MariaDB:
 - **Hapus** — klik tombol Hapus (dengan konfirmasi)
 
 Data disimpan di database `app_db` pada tabel `items` (kolom `id`, `name`,
-`description`, `created_at`). Tabel dibuat otomatis saat pertama kali MariaDB
-dijalankan melalui skrip `mariadb/init/01-init.sql`.
-
-Kredensial database (bisa diubah di `docker-compose.yml`):
-- Database: `app_db`
-- User: `app_user` / password: `app_pass`
-- Root password: `rootpass`
-
-### Mengecek data langsung di MariaDB
+`description`, `created_at`). Pastikan database & tabel sudah dibuat di MySQL
+lokal Anda, misalnya dengan menjalankan skrip `sql/setup.sql`:
 
 ```bash
-# Masuk ke shell container mariadb
-docker compose exec mariadb mariadb -uapp_user -papp_pass app_db
+mysql -u root -p < sql/setup.sql
+```
+
+Kredensial database lokal (atur di file `.env`, bukan `docker-compose.yml`):
+- Database: `app_db`
+- User: `root`
+- Password: sesuai MySQL lokal Anda
+
+### Mengecek data langsung di MySQL
+
+```bash
+# Jalankan dari terminal host (bukan di dalam container)
+mysql -u root -p -h 127.0.0.1 -P 3306 app_db
 
 # Contoh perintah
 SHOW TABLES;                # lihat daftar tabel

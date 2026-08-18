@@ -1,15 +1,15 @@
 <?php
 // =====================================================
-//  CRUD sederhana dengan penyimpanan data di MariaDB
-//  Tabel: items (dibuat otomatis oleh mariadb/init/)
+//  CRUD sederhana dengan penyimpanan data di MySQL
+//  Tabel: items (dibuat via sql/setup.sql di MySQL lokal)
 // =====================================================
 
-// ---------- Koneksi ke MariaDB via PDO ----------
-$host = getenv('MARIADB_HOST') ?: 'mariadb';
+// ---------- Koneksi ke MySQL lokal (host) via PDO ----------
+$host = getenv('MARIADB_HOST') ?: 'host.docker.internal';
 $port = getenv('MARIADB_PORT') ?: '3306';
 $db   = getenv('MARIADB_DATABASE') ?: 'app_db';
-$user = getenv('MARIADB_USER') ?: 'app_user';
-$pass = getenv('MARIADB_PASSWORD') ?: 'app_pass';
+$user = getenv('MARIADB_USER') ?: 'root';
+$pass = getenv('MARIADB_PASSWORD') ?: '';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
 $pdo = new PDO($dsn, $user, $pass, [
