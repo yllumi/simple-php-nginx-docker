@@ -15,16 +15,17 @@ Project "Hello World" menggunakan PHP, Nginx, Redis, MySQL, dan Docker.
 ├── php/
 │   └── Dockerfile      # Image PHP-FPM + ekstensi Redis & PDO MySQL
 ├── sql/
-│   └── setup.sql       # Skrip setup database & tabel untuk MySQL lokal
-├── .env                # Kredensial MySQL lokal (host)
+│   └── setup.sql       # Skrip setup db & tabel (auto-run saat volume mysql pertama dibuat)
+├── .env.example        # Contoh kredensial container MySQL (salin ke .env)
 ├── index.php           # Script PHP CLI (opsional)
-├── docker-compose.yml  # Definisi container (nginx + php-fpm + redis)
+├── docker-compose.yml  # Definisi container (nginx + php-fpm + redis + mysql)
 └── README.md
 ```
 
-## Menjalankan Web Server (Nginx + PHP-FPM + Redis + MySQL Lokal)
+## Menjalankan Web Server (Nginx + PHP-FPM + Redis + MySQL Container)
 
 ```bash
+cp .env.example .env   # opsional: sesuaikan kredensial MySQL
 docker compose up --build
 ```
 
@@ -34,12 +35,16 @@ Service yang berjalan:
 - **nginx** (`nginx:alpine`) — web server di port `80` (host: `8082`)
 - **php** (custom `php:8.3-fpm` + ekstensi `redis` & `pdo_mysql`) — pemroses file PHP
 - **redis** (`redis:7-alpine`) — penyimpanan data in-memory di port `6379` (host: `6381`)
+- **mysql** (`mysql:8.4`) — database MySQL, data persisten di volume `mysql-data`
 
-Database yang dipakai adalah **MySQL lokal di mesin host** (port `3306`),
-diakses dari dalam container melalui `host.docker.internal` (lihat `.env`).
+Database `app_db` beserta tabel `items` dibuat otomatis dari `sql/setup.sql`
+saat container MySQL pertama kali dijalankan. Data tersimpan di volume
+`mysql-data`, jadi tetap ada meski container di-restart atau dihapus.
 
 > Catatan: host port untuk nginx (`8082`) dan redis (`6381`) dipilih agar tidak
 > bentrok dengan proyek Docker lain yang sudah berjalan di `8080`/`6380`.
+> Port MySQL (`3306`) sengaja tidak dipublish agar tidak bentrok dengan MySQL
+> lokal di mesin Anda.
 
 ## Halaman CRUD Redis
 
@@ -67,7 +72,7 @@ HGETALL item:1  # lihat detail data ID 1
 ## Halaman CRUD MySQL
 
 Buka **http://localhost:8082/mariadb_crud.php** untuk mencoba CRUD sederhana
-dengan penyimpanan di database MySQL lokal (host):
+dengan penyimpanan di database container MySQL:
 
 - **Tambah** — isi form nama & deskripsi lalu klik Simpan
 - **Lihat** — semua data tampil dalam tabel
@@ -75,27 +80,33 @@ dengan penyimpanan di database MySQL lokal (host):
 - **Hapus** — klik tombol Hapus (dengan konfirmasi)
 
 Data disimpan di database `app_db` pada tabel `items` (kolom `id`, `name`,
-`description`, `created_at`). Pastikan database & tabel sudah dibuat di MySQL
-lokal Anda, misalnya dengan menjalankan skrip `sql/setup.sql`:
+`description`, `created_at`). Database & tabel dibuat otomatis oleh container
+MySQL dari `sql/setup.sql` saat volume `mysql-data` pertama kali dibuat —
+tidak perlu setup manual.
 
-```bash
-mysql -u root -p < sql/setup.sql
-```
-
-Kredensial database lokal (atur di file `.env`, bukan `docker-compose.yml`):
+Kredensial database (atur di file `.env`, salin dari `.env.example`):
 - Database: `app_db`
-- User: `root`
-- Password: sesuai MySQL lokal Anda
+- User: `app_user`
+- Password: sesuai `.env` (default: `app_password`)
 
-### Mengecek data langsung di MySQL
+### Mengecek data langsung di container MySQL
 
 ```bash
-# Jalankan dari terminal host (bukan di dalam container)
-mysql -u root -p -h 127.0.0.1 -P 3306 app_db
+# Masuk ke mysql client di dalam container
+# (password sesuai .env, default: app_password)
+docker compose exec mysql mysql -u app_user -p app_db
 
 # Contoh perintah
 SHOW TABLES;                # lihat daftar tabel
 SELECT * FROM items;        # lihat semua data
+```
+
+Mau mengakses MySQL container dari terminal host? Buka (uncomment) blok
+`ports` pada service `mysql` di `docker-compose.yml` (mis. `"3307:3306"`),
+jalankan `docker compose up -d`, lalu:
+
+```bash
+mysql -u app_user -p -h 127.0.0.1 -P 3307 app_db
 ```
 
 ## Menjalankan Versi CLI (Hello World di terminal)

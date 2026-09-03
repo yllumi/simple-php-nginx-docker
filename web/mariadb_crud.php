@@ -4,12 +4,12 @@
 //  Tabel: items (dibuat via sql/setup.sql di MySQL lokal)
 // =====================================================
 
-// ---------- Koneksi ke MySQL lokal (host) via PDO ----------
-$host = getenv('MARIADB_HOST') ?: 'host.docker.internal';
-$port = getenv('MARIADB_PORT') ?: '3306';
-$db   = getenv('MARIADB_DATABASE') ?: 'app_db';
-$user = getenv('MARIADB_USER') ?: 'root';
-$pass = getenv('MARIADB_PASSWORD') ?: '';
+// ---------- Koneksi ke MySQL container via PDO ----------
+$host = getenv('MYSQL_HOST') ?: 'mysql';
+$port = getenv('MYSQL_PORT') ?: '3306';
+$db   = getenv('MYSQL_DATABASE') ?: 'app_db';
+$user = getenv('MYSQL_USER') ?: 'app_user';
+$pass = getenv('MYSQL_PASSWORD') ?: '';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
 $pdo = new PDO($dsn, $user, $pass, [

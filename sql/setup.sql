@@ -1,7 +1,11 @@
 -- =====================================================
---  Setup database untuk MySQL LOKAL (host)
---  Jalankan sekali di MySQL lokal Anda, contoh:
---    mysql -u root -p < sql/setup.sql
+--  Setup database & tabel untuk container MySQL
+--  File ini otomatis dijalankan oleh image mysql saat
+--  volume `mysql-data` PERTAMA KALI dibuat (first init).
+--  Setelah volume ada, perubahan di sini TIDAK otomatis
+--  diterapkan; buat ulang volume dengan `down -v`.
+--  Bisa juga dijalankan manual, contoh:
+--    docker compose exec -T mysql mysql -u root -p < sql/setup.sql
 -- =====================================================
 
 CREATE DATABASE IF NOT EXISTS app_db

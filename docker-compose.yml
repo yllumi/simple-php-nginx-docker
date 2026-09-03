@@ -16,21 +16,21 @@ services:
   php:
     build: ./php
     container_name: testdocker-php
-    # Agar container bisa mengakses MySQL yang berjalan di mesin host
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - ./web:/var/www/html
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      mysql:
+        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - MARIADB_HOST=host.docker.internal
-      - MARIADB_PORT=3306
-      - MARIADB_DATABASE=${MYSQL_DATABASE:-app_db}
-      - MARIADB_USER=${MYSQL_USER:-root}
-      - MARIADB_PASSWORD=${MYSQL_PASSWORD:-change_me}
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-app_db}
+      - MYSQL_USER=${MYSQL_USER:-app_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-app_password}
 
   # Redis - penyimpanan data in-memory
   redis:
@@ -41,5 +41,33 @@ services:
     volumes:
       - redis-data:/data
 
+  # MySQL - database MySQL di dalam container.
+  # Data tersimpan persisten di volume mysql-data (/var/lib/mysql),
+  # sehingga tetap ada meski container dihapus/di-restart.
+  # Port host TIDAK dipublish agar tidak bentrok dengan MySQL di host (3306).
+  # Untuk debugging dari host, aktifkan blok ports di bawah (mis. 3307:3306).
+  mysql:
+    image: mysql:8.4
+    container_name: testdocker-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-app_db}
+      MYSQL_USER: ${MYSQL_USER:-app_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_password}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Skrip init hanya dijalankan OTOMATIS saat volume pertama kali dibuat
+      - ./sql/setup.sql:/docker-entrypoint-initdb.d/setup.sql:ro
+    # ports:
+    #   - "3307:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
 volumes:
   redis-data:
+  mysql-data:
